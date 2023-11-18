@@ -7,13 +7,13 @@ export const PostForm = ({ create }) => {
     body: "",
   }); // тут хранится пост,
   const addNewPost = (e) => {
-    e.preventDefault(); // отключаем обновление формы, т.к. она submit
+    e.preventDefault(); // отключает обновление формы, т.к. она submit
     const newPost = {
       ...post,
       id: Date.now(),
     };
     create(newPost);
-    setPost({ title: "", body: "" }); // обнуляем инпуст после добавления поста
+    setPost({ title: "", body: "" }); // обнуляет инпут после добавления поста
   };// по клику сначала срабатывает addNewPost, в котором лежит вызов функции create, которая наверху добавляет пост к состоянию, где хранятся все посты
   return (
     <form>
