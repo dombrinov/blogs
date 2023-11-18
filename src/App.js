@@ -8,27 +8,23 @@ import { MyButton } from "./components/ui/button/MyButton";
 import { usePosts } from "./hooks/usePosts";
 import PostService from "./API/PostService";
 import { Loader } from "./components/ui/Loader/Loader";
+import { useFetching } from "./hooks/useFetching";
 
 function App() {
   const [posts, setPosts] = useState([]); // тут хранятся все посты
   const [filter, setFilter] = useState({ sort: "", query: "" }); //поиск и селект
   const [modal, setModal] = useState(false); //модальное окно с созданием постов
-  const [isPostsLoading, setisPostsLoading] = useState(false);
 
   const sortedAndSearchedPosts = usePosts(posts, filter.sort, filter.query); // свой кастомный хук, лежит в папке hooks, сортирует и ищет по поисковой строке
 
+  const [fetchPosts, isPostsLoading, postErrors] = useFetching(async () => {
+    const posts = await PostService.getALL();
+    setPosts(posts);
+  }); //useFetching возвращает функцию, состояние загрузки и ошибку. в этом хуке происходит запрос на сервер через класс PostService => getAll => axios.get, полученный массив уходит в состояние posts
+
   useEffect(() => {
     fetchPosts();
-  }, []);
-
-  async function fetchPosts() {
-    setisPostsLoading(true);
-    setTimeout(async () => {
-      const posts = await PostService.getALL();
-      setPosts(posts);
-      setisPostsLoading(false);
-    }, [1000]);
-  }
+  }, []); // здесь происходит вызов функции запроса на сервер один раз для отрисовки массива
 
   const createPost = (newPost) => {
     setPosts([...posts, newPost]);
@@ -47,8 +43,15 @@ function App() {
       </MyModal>
       <hr style={{ margin: "15px 0" }} />
       <PostFilter filter={filter} setFilter={setFilter} />
+      {postErrors && <h1>Произошла ошибка ${postErrors}</h1>}
       {isPostsLoading ? (
-        <div style={{display: "flex", justifyContent: "center", marginTop5: "50px"}}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            marginTop5: "50px",
+          }}
+        >
           <Loader />
         </div>
       ) : (
