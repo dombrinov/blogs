@@ -1,4 +1,3 @@
-import { memo } from "react";
 import React from "react";
 import { getPagesArray } from "../../../utils/pages";
 

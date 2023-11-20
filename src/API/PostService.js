@@ -7,10 +7,15 @@ export default class PostService {
       {
         params: {
           _limit: limit,
-          _page: page
+          _page: page,
         },
       }
     );
+    return response;
+  }
+  static async getById(id) {
+    const response = await axios.get(
+      "https://jsonplaceholder.typicode.com/posts/" + id);
     return response;
   }
 }
