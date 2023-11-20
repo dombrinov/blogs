@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import "../styles/App.css";
 import { PostList } from "../components/PostList";
 import { PostForm } from "../components/ui/PostForm/PostForm";
@@ -12,6 +12,8 @@ import { useFetching } from "../hooks/useFetching";
 import { getPageCount } from "../utils/pages";
 import { Pagination } from "../components/ui/Pagination/Pagination";
 import { Navbar } from "../components/ui/Navbar/Navbar";
+import { useObserver } from "../hooks/useObserver";
+import { MySelect } from "../components/ui/select/MySelect";
 
 function Posts() {
   const [posts, setPosts] = useState([]); // тут хранятся все посты
@@ -20,21 +22,26 @@ function Posts() {
   const [totalPages, setTotalPages] = useState(0);
   const [limit, setLimit] = useState(10); // лимит постов в запросе
   const [page, setPage] = useState(1); // номер текущей страницы
+  const lastElement = useRef();
 
   const sortedAndSearchedPosts = usePosts(posts, filter.sort, filter.query); // свой кастомный хук, лежит в папке hooks, сортирует и ищет по поисковой строке
 
   const [fetchPosts, isPostsLoading, postErrors] = useFetching(
     async (limit, page) => {
       const response = await PostService.getALL(limit, page);
-      setPosts(response.data);
+      setPosts([...posts, ...response.data]);
       const totalCount = response.headers["x-total-count"];
       setTotalPages(getPageCount(totalCount, limit));
     }
   ); //useFetching возвращает функцию, состояние загрузки и ошибку. в этом хуке происходит запрос на сервер через класс PostService => getAll => axios.get, полученный массив с лимитом постов уходит в состояние posts,
 
+  useObserver(lastElement, page < totalPages, isPostsLoading, () => {
+    setPage(page + 1);
+  });
+
   useEffect(() => {
     fetchPosts(limit, page);
-  }, [page]); // здесь происходит вызов функции запроса на сервер один раз для отрисовки массива, добавлена зависимость, чтобы отслеживать лимит постов (запрос делается по лимиту)
+  }, [page, limit]); // здесь происходит вызов функции запроса на сервер один раз для отрисовки массива, добавлена зависимость, чтобы отслеживать лимит постов (запрос делается по лимиту)
 
   const createPost = (newPost) => {
     setPosts([...posts, newPost]);
@@ -47,7 +54,6 @@ function Posts() {
 
   const changePage = (page) => {
     setPage(page);
-    fetchPosts(limit, page);
   }; //по клику происходит смена стилей(чтобы подсветить текущую страницу)
 
   //инлайн стили использованы только чтобы показать, что так тоже можно
@@ -60,8 +66,25 @@ function Posts() {
       </MyModal>
       <hr style={{ margin: "15px 0" }} />
       <PostFilter filter={filter} setFilter={setFilter} />
+      <MySelect
+        value={limit}
+        onChange={(value) => setLimit(value)}
+        defaultValue="Количество постов на странице"
+        options={[
+          { value: 5, name: "5" },
+          { value: 10, name: "10" },
+          { value: 25, name: "25" },
+          { value: -1, name: "Все посты" },
+        ]}
+      />
       {postErrors && <h1>Произошла ошибка ${postErrors}</h1>}
-      {isPostsLoading ? (
+      <PostList
+        remove={removePost}
+        posts={sortedAndSearchedPosts}
+        title={"Список постов"}
+      />
+      <div ref={lastElement} style={{ height: 20 }} />
+      {isPostsLoading && (
         <div
           style={{
             display: "flex",
@@ -71,12 +94,6 @@ function Posts() {
         >
           <Loader />
         </div>
-      ) : (
-        <PostList
-          remove={removePost}
-          posts={sortedAndSearchedPosts}
-          title={"Список постов"}
-        />
       )}
       <Pagination page={page} changePage={changePage} totalPages={totalPages} />
     </div>

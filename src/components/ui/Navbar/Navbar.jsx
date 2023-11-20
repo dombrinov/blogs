@@ -14,7 +14,7 @@ export const Navbar = () => {
       <MyButton onClick={logout}>Выйти на страницу логина</MyButton>
       <div className="navbar__links">
         <Link to="/about">О сайте</Link>
-        <Link to="/posts">Посты</Link>
+        <Link to="/">Посты</Link>
       </div>
     </div>
   );
