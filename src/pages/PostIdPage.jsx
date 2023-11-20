@@ -27,6 +27,7 @@ export const PostIdPage = () => {
 
   return (
     <div>
+      {error && <h1>Произошла ошибка ${error}</h1>}
       <h1>Страница поста c id= {params.id}</h1>
       <div>
         {isLoading ? (
@@ -40,6 +41,7 @@ export const PostIdPage = () => {
           </div>
         )}
       </div>
+      {comError && <h1>Произошла ошибка ${comError}</h1>}
       <h2>Комментарии</h2>
       <div>
         {isComLoading ? (
@@ -47,7 +49,9 @@ export const PostIdPage = () => {
         ) : (
           <div>
             {comments.map((comm) => {
-              return <Comments email={comm.email} body={comm.body} />;
+              return (
+                <Comments key={comm.id} email={comm.email} body={comm.body} />
+              );
             })}
           </div>
         )}
