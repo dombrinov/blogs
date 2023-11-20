@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-
+//cортировка
 export const useSortedPosts = (posts, sort) => {
   const sortedPosts = useMemo(() => {
     if (sort) {
@@ -11,7 +11,7 @@ export const useSortedPosts = (posts, sort) => {
   // useMemo чтобы рендерился массив постов при изменении либо селекта либо массива постов, но только один раз
   return sortedPosts;
 };
-
+//поиск
 export const usePosts = (posts, sort, query) => {
   const sortedPosts = useSortedPosts(posts, sort);
   const sortedAndSearchedPosts = useMemo(() => {

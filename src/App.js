@@ -9,22 +9,31 @@ import { usePosts } from "./hooks/usePosts";
 import PostService from "./API/PostService";
 import { Loader } from "./components/ui/Loader/Loader";
 import { useFetching } from "./hooks/useFetching";
+import { getPageCount } from "./utils/pages";
+import { Pagination } from "./components/ui/Pagination/Pagination";
 
 function App() {
   const [posts, setPosts] = useState([]); // тут хранятся все посты
   const [filter, setFilter] = useState({ sort: "", query: "" }); //поиск и селект
   const [modal, setModal] = useState(false); //модальное окно с созданием постов
+  const [totalPages, setTotalPages] = useState(0);
+  const [limit, setLimit] = useState(10); // лимит постов в запросе
+  const [page, setPage] = useState(1); // номер текущей страницы
 
   const sortedAndSearchedPosts = usePosts(posts, filter.sort, filter.query); // свой кастомный хук, лежит в папке hooks, сортирует и ищет по поисковой строке
 
-  const [fetchPosts, isPostsLoading, postErrors] = useFetching(async () => {
-    const posts = await PostService.getALL();
-    setPosts(posts);
-  }); //useFetching возвращает функцию, состояние загрузки и ошибку. в этом хуке происходит запрос на сервер через класс PostService => getAll => axios.get, полученный массив уходит в состояние posts
+  const [fetchPosts, isPostsLoading, postErrors] = useFetching(
+    async (limit, page) => {
+      const response = await PostService.getALL(limit, page);
+      setPosts(response.data);
+      const totalCount = response.headers["x-total-count"];
+      setTotalPages(getPageCount(totalCount, limit));
+    }
+  ); //useFetching возвращает функцию, состояние загрузки и ошибку. в этом хуке происходит запрос на сервер через класс PostService => getAll => axios.get, полученный массив с лимитом постов уходит в состояние posts,
 
   useEffect(() => {
-    fetchPosts();
-  }, []); // здесь происходит вызов функции запроса на сервер один раз для отрисовки массива
+    fetchPosts(limit, page);
+  }, [page]); // здесь происходит вызов функции запроса на сервер один раз для отрисовки массива, добавлена зависимость, чтобы отслеживать лимит постов (запрос делается по лимиту)
 
   const createPost = (newPost) => {
     setPosts([...posts, newPost]);
@@ -35,6 +44,13 @@ function App() {
     setPosts(posts.filter((p) => p.id !== post.id)); // т.к. в Posts лежит массив с постами, то фильтруем его так: в функцию пришел post, а т.к. функция срабатывает на событии в кнопке удалить конкретного поста, то так мы получаем его id и сравниваем с id всех постов в состоянии posts, если в каждом обьекте id не равен тому id из события, то это true и отрисовывается в приложении, а тот что равен это false, он отрисовываться не будет
   };
 
+  const changePage = (page) => {
+    setPage(page);
+    fetchPosts(limit, page);
+  }; //по клику происходит смена стилей(чтобы подсветить текущую страницу)
+
+  
+  //инлайн стили использованы только чтобы показать, что так тоже можно
   return (
     <div className="App">
       <MyButton onClick={() => setModal(true)}>Create post</MyButton>
@@ -61,6 +77,7 @@ function App() {
           title={"Список постов"}
         />
       )}
+      <Pagination page={page} changePage={changePage} totalPages={totalPages} />
     </div>
   );
 }
