@@ -64,7 +64,7 @@ function Posts() {
       <MyModal visible={modal} setVisible={setModal}>
         <PostForm create={createPost} />
       </MyModal>
-      <hr style={{ margin: "15px 0" }} />
+      <hr className="greyline" />
       <PostFilter filter={filter} setFilter={setFilter} />
       <MySelect
         value={limit}
@@ -83,15 +83,9 @@ function Posts() {
         posts={sortedAndSearchedPosts}
         title={"Список постов"}
       />
-      <div ref={lastElement} style={{ height: 20 }} />
+      <div ref={lastElement} className="divToObserve" />
       {isPostsLoading && (
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            marginTop5: "50px",
-          }}
-        >
+        <div className="divToLoader">
           <Loader />
         </div>
       )}
